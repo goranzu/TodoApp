@@ -1,28 +1,22 @@
-import {useEffect, useState} from 'react'
-import {Button} from "@/components/ui/button.tsx";
+import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import LoginPage from "@/pages/login.tsx";
+import RegisterPage from "@/pages/register.tsx";
+
+const routes = createBrowserRouter([
+    {
+        path: "/",
+        element: <LoginPage/>
+    },
+    {
+        path: "/register",
+        element: <RegisterPage/>
+    }
+])
 
 function App() {
-    const [message, setMessage] = useState("");
-    const [showMessage, setShowMessage] = useState(false);
-
-    useEffect(() => {
-        async function getData() {
-            const response = await fetch("/api");
-            if (response.ok) {
-                const data = await response.text();
-                setMessage(data);
-            }
-        }
-
-        getData();
-    }, []);
-
     return (
         <>
-            <Button onClick={() => setShowMessage(!showMessage)}>Show Message</Button>
-            {showMessage && (
-                <h1 className="text-8xl">From Server: {message.length > 0 ? message : "No message yet!"}</h1>
-            )}
+            <RouterProvider router={routes}/>
         </>
     )
 }
