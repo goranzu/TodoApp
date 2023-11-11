@@ -1,4 +1,9 @@
 var builder = WebApplication.CreateBuilder(args);
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8081";
+if (builder.Environment.IsProduction())
+{
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
 
 builder.Services.AddProblemDetails();
 builder.Services.AddSpaStaticFiles(options => { options.RootPath = "wwwroot"; });
@@ -12,6 +17,11 @@ app.UseRouting();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+}
+
+if (app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
 }
 
 app.UseStatusCodePages();
