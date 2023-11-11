@@ -1,9 +1,24 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using TodoApp.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8081";
 if (builder.Environment.IsProduction())
 {
     builder.WebHost.UseUrls($"http://*:{port}");
 }
+
+builder.Services.AddDbContext<TodoAppDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Default");
+    options.UseNpgsql(connectionString);
+});
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<TodoAppDbContext>()
+    .AddDefaultTokenProviders();
+builder.Services.AddHostedService<DatabaseInitializer>();
+
 
 builder.Services.AddProblemDetails();
 builder.Services.AddSpaStaticFiles(options => { options.RootPath = "wwwroot"; });
