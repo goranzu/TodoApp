@@ -1,49 +1,30 @@
-import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import {useEffect, useState} from 'react'
+import {Button} from "@/components/ui/button.tsx";
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [message, setMessage] = useState("");
+    const [message, setMessage] = useState("");
+    const [showMessage, setShowMessage] = useState(false);
 
-  useEffect(() => {
-    async function getData() {
-      const response = await fetch("/api");
-      if (response.ok) {
-        const data = await response.text();
-        setMessage(data);
-      }
-    }
+    useEffect(() => {
+        async function getData() {
+            const response = await fetch("/api");
+            if (response.ok) {
+                const data = await response.text();
+                setMessage(data);
+            }
+        }
 
-    getData();
-  }, []);
+        getData();
+    }, []);
 
-  return (
-    <>
-      <div>
-        <h1>From Server: {message.length > 0 ? message : "No message yet!"}</h1>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    return (
+        <>
+            <Button onClick={() => setShowMessage(!showMessage)}>Show Message</Button>
+            {showMessage && (
+                <h1 className="text-8xl">From Server: {message.length > 0 ? message : "No message yet!"}</h1>
+            )}
+        </>
+    )
 }
 
 export default App
