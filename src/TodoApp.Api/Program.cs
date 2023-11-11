@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TodoApp.Api.Data;
@@ -19,16 +21,68 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddDefaultTokenProviders();
 builder.Services.AddHostedService<DatabaseInitializer>();
 
-
+builder.Services.AddAuthorization();
 builder.Services.AddProblemDetails();
 builder.Services.AddSpaStaticFiles(options => { options.RootPath = "wwwroot"; });
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.Configure<IdentityOptions>(options =>
+    {
+        options.User.RequireUniqueEmail = false;
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 3;
+    });
+}
 
 var app = builder.Build();
 
 var apiGroup = app.MapGroup("/api");
 apiGroup.MapGet("/", () => "Hello World!");
+apiGroup.MapGet("/user",
+    (ClaimsPrincipal user) => { return Results.Ok(user.Claims.ToDictionary(x => x.Type, x => x.Value)); });
+apiGroup.MapPost("/register",
+    async (RegisterForm registerForm, SignInManager<IdentityUser> signInManager,
+        UserManager<IdentityUser> userManager) =>
+    {
+        if (!registerForm.Password.Equals(registerForm.ConfirmPassword))
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                {
+                    "ConfirmPassword", new[] { "Passwords do not match" }
+                }
+            });
+        }
+
+        var user = new IdentityUser { Email = registerForm.Email, UserName = registerForm.Email };
+        await userManager.CreateAsync(user, registerForm.Password);
+
+        return Results.Ok();
+    });
+
+apiGroup.MapPost("/login",
+    async (LoginForm loginForm, SignInManager<IdentityUser> signInManager) =>
+    {
+        var result = await signInManager.PasswordSignInAsync(loginForm.Email, loginForm.Password, true, false);
+
+        if (!result.Succeeded)
+        {
+            return Results.Problem("Invalid login details", null, StatusCodes.Status400BadRequest);
+        }
+
+        return Results.Ok();
+    });
+apiGroup.MapDelete("/logout",
+        async (SignInManager<IdentityUser> signInManager) => { await signInManager.SignOutAsync(); })
+    .RequireAuthorization();
 
 app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -64,3 +118,16 @@ app.UseSpa(options =>
 });
 
 app.Run();
+
+public sealed class LoginForm
+{
+    [Required] [EmailAddress] public string Email { get; set; } = null!;
+    [Required] [MinLength(3)] public string Password { get; set; } = null!;
+}
+
+public sealed class RegisterForm
+{
+    [Required] [EmailAddress] public string Email { get; set; } = null!;
+    [Required] [MinLength(3)] public string Password { get; set; } = null!;
+    [Required] [MinLength(3)] public string ConfirmPassword { get; set; } = null!;
+}

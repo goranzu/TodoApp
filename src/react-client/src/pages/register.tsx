@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form"
 import {Input} from "@/components/ui/input"
 import {Link} from "react-router-dom";
+import {RegisterForm, useAuth} from "@/context/auth-context.tsx";
 
 const formSchema = z.object({
     email: z.string().email(),
@@ -24,6 +25,7 @@ const formSchema = z.object({
     });
 
 export default function RegisterPage() {
+    const {register} = useAuth();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -33,8 +35,8 @@ export default function RegisterPage() {
         },
     })
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values)
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        await register(new RegisterForm(values.email, values.password, values.confirmPassword));
     }
 
     return (
