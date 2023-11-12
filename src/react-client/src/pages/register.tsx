@@ -36,7 +36,8 @@ export default function RegisterPage() {
     })
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        await register(new RegisterForm(values.email, values.password, values.confirmPassword));
+        await register(new RegisterForm(values.email, values.password, values.confirmPassword), () => {
+        });
     }
 
     return (
