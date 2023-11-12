@@ -2,11 +2,12 @@ import {createContext, useContext, useEffect, useState} from "react";
 
 interface AuthContextType {
     isAuthenticated: boolean;
-    login: (loginForm: LoginForm) => Promise<void>;
-    register: (registerForm: RegisterForm) => Promise<void>;
-    logout: () => Promise<void>;
+    login: (loginForm: LoginForm, callback: (errorMessage: string | undefined) => void) => Promise<void>;
+    register: (registerForm: RegisterForm, callback: VoidFunction) => Promise<void>;
+    logout: (callback: VoidFunction) => Promise<void>;
     getUser: () => Promise<void>;
     isLoading: boolean;
+    errorMessage?: string;
 }
 
 export class LoginForm {
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthContextProvider({children}: { children: React.ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState();
 
     useEffect(() => {
         async function verifyUser() {
@@ -40,7 +42,8 @@ export function AuthContextProvider({children}: { children: React.ReactNode }) {
         verifyUser();
     }, []);
 
-    async function login(loginForm: LoginForm) {
+    async function login(loginForm: LoginForm, callback: VoidFunction) {
+        setErrorMessage(undefined);
         const response = await fetch("/api/login", {
             headers: {
                 "Content-Type": "application/json"
@@ -50,12 +53,16 @@ export function AuthContextProvider({children}: { children: React.ReactNode }) {
         });
         if (response.ok) {
             setIsAuthenticated(true);
+            callback();
             return;
         }
+        const errorDetail = await response.json();
+        // setErrorMessage(errorDetail.detail);
+        callback(errorDetail.detail);
         setIsAuthenticated(false);
     }
 
-    async function register(registerForm: RegisterForm) {
+    async function register(registerForm: RegisterForm, callback: VoidFunction) {
         const response = await fetch("/api/register", {
             headers: {
                 "Content-Type": "application/json"
@@ -65,16 +72,18 @@ export function AuthContextProvider({children}: { children: React.ReactNode }) {
         });
         if (response.ok) {
             await getUser();
+            callback();
         }
     }
 
-    async function logout() {
+    async function logout(callback: VoidFunction) {
         const response = await fetch("/api/logout", {
-            method: "DESTROY"
+            method: "POST"
         });
 
         if (response.ok) {
             setIsAuthenticated(false);
+            callback();
         }
     }
 
@@ -91,7 +100,15 @@ export function AuthContextProvider({children}: { children: React.ReactNode }) {
     }
 
     return <AuthContext.Provider
-        value={{isAuthenticated, isLoading, login, logout, register, getUser}}>{children}</AuthContext.Provider>
+        value={{
+            isAuthenticated,
+            isLoading,
+            login,
+            logout,
+            register,
+            getUser,
+            errorMessage
+        }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

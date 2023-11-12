@@ -11,8 +11,9 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import {Input} from "@/components/ui/input"
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {LoginForm, useAuth} from "@/context/auth-context.tsx";
+import {useState} from "react";
 
 const formSchema = z.object({
     email: z.string().email(),
@@ -21,6 +22,8 @@ const formSchema = z.object({
 
 export default function LoginPage() {
     const {login} = useAuth();
+    const [serverErrorMessage, setServerErrorMessage] = useState("");
+    const navigate = useNavigate();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -30,7 +33,13 @@ export default function LoginPage() {
     });
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        await login(new LoginForm(values.email, values.password));
+        await login(new LoginForm(values.email, values.password), (serverErrorMessage: string | undefined) => {
+            if (serverErrorMessage) {
+                setServerErrorMessage(serverErrorMessage);
+            } else {
+                navigate("/dashboard");
+            }
+        });
     }
 
     return (
@@ -69,6 +78,12 @@ export default function LoginPage() {
                         Don't have an account yet? Click <Link className="underline" to="/register">here</Link> to
                         create one.
                     </p>
+                    {serverErrorMessage && serverErrorMessage.length > 0 && (
+                        <p className="text-center text-destructive">{serverErrorMessage}</p>
+                    )}
+                    {/*{errorMessage && errorMessage.length > 0 && (*/}
+                    {/*    <p className="text-center text-destructive">{errorMessage}</p>*/}
+                    {/*)}*/}
                 </form>
             </Form>
         </div>
