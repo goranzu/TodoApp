@@ -13,9 +13,9 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddDbContext<TodoAppDbContext>(options =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL") is not null
+    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") is not null
         ? BuildConnectionString(
-            Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL")!)
+            Environment.GetEnvironmentVariable("DATABASE_URL")!)
         : builder.Configuration.GetConnectionString("Default");
     options.UseNpgsql(connectionString);
 });
