@@ -13,8 +13,10 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddDbContext<TodoAppDbContext>(options =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL") ??
-                           builder.Configuration.GetConnectionString("Default");
+    var connectionString = Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL") is not null
+        ? BuildConnectionString(
+            Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL")!)
+        : builder.Configuration.GetConnectionString("Default");
     options.UseNpgsql(connectionString);
 });
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
@@ -131,6 +133,19 @@ app.UseSpa(options =>
 });
 
 app.Run();
+
+static string BuildConnectionString(string databaseUrl)
+{
+    var uri = new Uri(databaseUrl);
+
+    var userInfo = uri.UserInfo.Split(':');
+    var username = userInfo[0];
+    var password = userInfo[1];
+
+    var dbName = uri.AbsolutePath.TrimStart('/');
+
+    return $"Host={uri.Host};Port={uri.Port};Database={dbName};Username={username};Password={password}";
+}
 
 public sealed class LoginForm
 {
