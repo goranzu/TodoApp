@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using TodoApp.Api.Data;
 using TodoApp.Api.Handlers;
 
@@ -9,6 +10,14 @@ if (builder.Environment.IsProduction())
 {
     builder.WebHost.UseUrls($"http://*:{port}");
 }
+
+builder.Host.UseSerilog(((context, configuration) =>
+{
+    configuration.WriteTo
+        .Console();
+    // .WriteTo
+    // .File("logs.txt");
+}));
 
 builder.Services.AddDbContext<TodoAppDbContext>(options =>
 {

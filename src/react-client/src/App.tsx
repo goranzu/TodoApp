@@ -1,35 +1,21 @@
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import {Route, Routes} from "react-router-dom";
 import LoginPage from "@/pages/login.tsx";
 import RegisterPage from "@/pages/register.tsx";
 import {AuthContextProvider} from "@/context/auth-context.tsx";
 import PrivateRoutes from "@/layouts/auth-layout.tsx";
-
-const routes = createBrowserRouter([
-    {
-        path: "/",
-        element: <LoginPage/>
-    },
-    {
-        path: "/register",
-        element: <RegisterPage/>
-    },
-    {
-        path: "/dashboard",
-        element: <PrivateRoutes/>,
-        children: [
-            {
-                path: "/dashboard",
-                element: <h1>Protected</h1>
-            }
-        ]
-    }
-])
+import DashboardPage from "@/pages/dashboard.tsx";
 
 function App() {
     return (
         <>
             <AuthContextProvider>
-                <RouterProvider router={routes}/>
+                <Routes>
+                    <Route path={"/"} element={<LoginPage/>}/>
+                    <Route path={"register"} element={<RegisterPage/>}/>
+                    <Route path={"dashboard"} element={<PrivateRoutes/>}>
+                        <Route index element={<DashboardPage/>}/>
+                    </Route>
+                </Routes>
             </AuthContextProvider>
         </>
     )
