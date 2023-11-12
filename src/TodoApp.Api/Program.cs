@@ -1,9 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using TodoApp.Api.Data;
+using TodoApp.Api.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8081";
@@ -16,13 +14,9 @@ builder.Services.AddDbContext<TodoAppDbContext>(options =>
 {
     var defaultString = builder.Configuration.GetConnectionString("Default");
     var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL");
-    var connectionString = string.IsNullOrEmpty(databaseUrl) ? defaultString : BuildConnectionString(databaseUrl);
-    // var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") is not null
-    //     
-    //     ? BuildConnectionString(
-    //         Environment.GetEnvironmentVariable("DATABASE_URL")!)
-    //     : builder.Configuration.GetConnectionString("Default");
-    Console.WriteLine($"CONNECTION VAR: {connectionString}");
+    var connectionString = string.IsNullOrEmpty(databaseUrl)
+        ? defaultString
+        : DatabaseHelpers.BuildConnectionString(databaseUrl);
     options.UseNpgsql(connectionString);
 });
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
@@ -51,54 +45,10 @@ var app = builder.Build();
 
 var apiGroup = app.MapGroup("/api");
 apiGroup.MapGet("/", () => "Hello World!");
-apiGroup.MapGet("/user",
-    (ClaimsPrincipal user) => { return Results.Ok(user.Claims.ToDictionary(x => x.Type, x => x.Value)); });
-apiGroup.MapPost("/register",
-    async (RegisterForm registerForm, SignInManager<IdentityUser> signInManager,
-        UserManager<IdentityUser> userManager) =>
-    {
-        if (!registerForm.Password.Equals(registerForm.ConfirmPassword))
-        {
-            return Results.ValidationProblem(new Dictionary<string, string[]>
-            {
-                {
-                    "ConfirmPassword", new[] { "Passwords do not match" }
-                }
-            });
-        }
-
-        var user = new IdentityUser { Email = registerForm.Email, UserName = registerForm.Email };
-        var result = await userManager.CreateAsync(user, registerForm.Password);
-        if (!result.Succeeded)
-        {
-            var errors = result.Errors
-                .GroupBy(e => e.Code)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(e => e.Description).ToArray()
-                );
-            return Results.ValidationProblem(errors);
-        }
-
-        await signInManager.SignInAsync(user, true);
-
-        return Results.Ok();
-    });
-
-apiGroup.MapPost("/login",
-    async (LoginForm loginForm, SignInManager<IdentityUser> signInManager) =>
-    {
-        var result = await signInManager.PasswordSignInAsync(loginForm.Email, loginForm.Password, true, false);
-
-        if (!result.Succeeded)
-        {
-            return Results.Problem("Invalid login details", null, StatusCodes.Status400BadRequest);
-        }
-
-        return Results.Ok();
-    });
-apiGroup.MapDelete("/logout",
-        async (SignInManager<IdentityUser> signInManager) => { await signInManager.SignOutAsync(); })
+apiGroup.MapGet("/user", UserHandlers.GetUser);
+apiGroup.MapPost("/register", RegisterHandler.Handler);
+apiGroup.MapPost("/login", LoginHandler.Handler);
+apiGroup.MapPost("/logout", LogoutHandler.Handler)
     .RequireAuthorization();
 
 app.UseRouting();
@@ -139,34 +89,3 @@ app.UseSpa(options =>
 });
 
 app.Run();
-
-static string BuildConnectionString(string databaseUrl)
-{
-    var databaseUri = new Uri(databaseUrl);
-    var userInfo = databaseUri.UserInfo.Split(':');
-    var builder = new NpgsqlConnectionStringBuilder
-    {
-        Host = databaseUri.Host,
-        Port = databaseUri.Port,
-        Username = userInfo[0],
-        Password = userInfo[1],
-        Database = databaseUri.LocalPath.TrimStart('/'),
-        SslMode = SslMode.Require,
-        TrustServerCertificate = true
-    };
-    return builder.ToString();
-}
-
-
-public sealed class LoginForm
-{
-    [Required] [EmailAddress] public string Email { get; set; } = null!;
-    [Required] [MinLength(3)] public string Password { get; set; } = null!;
-}
-
-public sealed class RegisterForm
-{
-    [Required] [EmailAddress] public string Email { get; set; } = null!;
-    [Required] [MinLength(3)] public string Password { get; set; } = null!;
-    [Required] [MinLength(3)] public string ConfirmPassword { get; set; } = null!;
-}
