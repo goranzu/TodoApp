@@ -14,10 +14,14 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddDbContext<TodoAppDbContext>(options =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") is not null
-        ? BuildConnectionString(
-            Environment.GetEnvironmentVariable("DATABASE_URL")!)
-        : builder.Configuration.GetConnectionString("Default");
+    var defaultString = builder.Configuration.GetConnectionString("Default");
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    var connectionString = string.IsNullOrEmpty(databaseUrl) ? defaultString : BuildConnectionString(databaseUrl);
+    // var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") is not null
+    //     
+    //     ? BuildConnectionString(
+    //         Environment.GetEnvironmentVariable("DATABASE_URL")!)
+    //     : builder.Configuration.GetConnectionString("Default");
     Console.WriteLine($"CONNECTION VAR: {connectionString}");
     options.UseNpgsql(connectionString);
 });
