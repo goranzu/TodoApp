@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form"
 import {Input} from "@/components/ui/input"
 import {Link} from "react-router-dom";
+import {LoginForm, useAuth} from "@/context/auth-context.tsx";
 
 const formSchema = z.object({
     email: z.string().email(),
@@ -19,15 +20,17 @@ const formSchema = z.object({
 })
 
 export default function LoginPage() {
+    const {login} = useAuth();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             email: "",
+            password: "",
         },
-    })
+    });
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values)
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        await login(new LoginForm(values.email, values.password));
     }
 
     return (
@@ -63,7 +66,8 @@ export default function LoginPage() {
                     />
                     <Button className="w-full" type="submit">Sign In</Button>
                     <p className="text-xs text-center">
-                        Don't have an account yet? Click <Link className="underline" to="/register">here</Link> to create one.
+                        Don't have an account yet? Click <Link className="underline" to="/register">here</Link> to
+                        create one.
                     </p>
                 </form>
             </Form>

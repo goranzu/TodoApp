@@ -4,24 +4,16 @@
         <TargetFramework>net7.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-<!--        <SpaRoot>../react-client/</SpaRoot>-->
+        <UserSecretsId>084b4218-3082-4e3c-b16a-1f6317199636</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.13" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.13"/>
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="7.0.13"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.13">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11"/>
     </ItemGroup>
-
-<!--    <Target Name="PublishRunVite" AfterTargets="ComputeFilesToPublish">-->
-<!--        <Exec Command="npm install" WorkingDirectory="$(SpaRoot)"/>-->
-<!--        <Exec Command="npm run build" WorkingDirectory="$(SpaRoot)"/>-->
-
-<!--        <ItemGroup>-->
-<!--            <DistFiles Include="$(SpaRoot)/dist/**"/>-->
-<!--            <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">-->
-<!--                <RelativePath>wwwroot/%(RecursiveDir)%(FileName)%(Extension)</RelativePath>-->
-<!--                <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>-->
-<!--                <ExcludeFromSingleFile>true</ExcludeFromSingleFile>-->
-<!--            </ResolvedFileToPublish>-->
-<!--        </ItemGroup>-->
-<!--    </Target>-->
 </Project>
