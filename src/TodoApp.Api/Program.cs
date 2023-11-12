@@ -13,7 +13,8 @@ if (builder.Environment.IsProduction())
 
 builder.Services.AddDbContext<TodoAppDbContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("Default");
+    var connectionString = Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL") ??
+                           builder.Configuration.GetConnectionString("Default");
     options.UseNpgsql(connectionString);
 });
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
