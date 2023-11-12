@@ -15,7 +15,7 @@ if (builder.Environment.IsProduction())
 builder.Services.AddDbContext<TodoAppDbContext>(options =>
 {
     var defaultString = builder.Configuration.GetConnectionString("Default");
-    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_PRIVATE_URL");
     var connectionString = string.IsNullOrEmpty(databaseUrl) ? defaultString : BuildConnectionString(databaseUrl);
     // var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") is not null
     //     
@@ -155,17 +155,6 @@ static string BuildConnectionString(string databaseUrl)
         TrustServerCertificate = true
     };
     return builder.ToString();
-    // var builder = new NpgsqlConnectionStringBuilder
-    // {
-    //     Host = databaseUri.Host,
-    //     Port = databaseUri.Port,
-    //     Username = userInfo[0],
-    //     Password = userInfo[1],
-    //     Database = databaseUri.LocalPath.TrimStart('/'),
-    //     SslMode = SslMode.Require,
-    //     TrustServerCertificate = true
-    // };
-    // return builder.ToString();
 }
 
 
