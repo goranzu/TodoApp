@@ -59,7 +59,19 @@ apiGroup.MapPost("/register",
         }
 
         var user = new IdentityUser { Email = registerForm.Email, UserName = registerForm.Email };
-        await userManager.CreateAsync(user, registerForm.Password);
+        var result = await userManager.CreateAsync(user, registerForm.Password);
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors
+                .GroupBy(e => e.Code)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(e => e.Description).ToArray()
+                );
+            return Results.ValidationProblem(errors);
+        }
+
+        await signInManager.SignInAsync(user, true);
 
         return Results.Ok();
     });
