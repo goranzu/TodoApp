@@ -18,6 +18,7 @@ builder.Services.AddDbContext<TodoAppDbContext>(options =>
         ? BuildConnectionString(
             Environment.GetEnvironmentVariable("DATABASE_URL")!)
         : builder.Configuration.GetConnectionString("Default");
+    Console.WriteLine($"CONNECTION VAR: {connectionString}");
     options.UseNpgsql(connectionString);
 });
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
