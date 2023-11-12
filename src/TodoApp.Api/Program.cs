@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TodoApp.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -136,16 +137,32 @@ app.Run();
 
 static string BuildConnectionString(string databaseUrl)
 {
-    var uri = new Uri(databaseUrl);
-
-    var userInfo = uri.UserInfo.Split(':');
-    var username = userInfo[0];
-    var password = userInfo[1];
-
-    var dbName = uri.AbsolutePath.TrimStart('/');
-
-    return $"Host={uri.Host};Port={uri.Port};Database={dbName};Username={username};Password={password}";
+    var databaseUri = new Uri(databaseUrl);
+    var userInfo = databaseUri.UserInfo.Split(':');
+    var builder = new NpgsqlConnectionStringBuilder
+    {
+        Host = databaseUri.Host,
+        Port = databaseUri.Port,
+        Username = userInfo[0],
+        Password = userInfo[1],
+        Database = databaseUri.LocalPath.TrimStart('/'),
+        SslMode = SslMode.Require,
+        TrustServerCertificate = true
+    };
+    return builder.ToString();
+    // var builder = new NpgsqlConnectionStringBuilder
+    // {
+    //     Host = databaseUri.Host,
+    //     Port = databaseUri.Port,
+    //     Username = userInfo[0],
+    //     Password = userInfo[1],
+    //     Database = databaseUri.LocalPath.TrimStart('/'),
+    //     SslMode = SslMode.Require,
+    //     TrustServerCertificate = true
+    // };
+    // return builder.ToString();
 }
+
 
 public sealed class LoginForm
 {
